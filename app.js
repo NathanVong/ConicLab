@@ -4,12 +4,12 @@ const $=s=>document.querySelector(s);
 const canvas=$('#graph'),ctx=canvas.getContext('2d');
 const state={mode:'ellipse',a:5,b:3,t:.85,showRay:true};
 let geo,scale,origin,w,h,dragging=false;
-const colors={curve:'#72adff',foci:'#ff9884',point:'#ffce83',grid:'#26374a',text:'#8196ad'};
+const colors={curve:'#3478df',foci:'#e57b6c',point:'#e5a645',grid:'#e0e8f2',text:'#95a3b5'};
 const norm=(v)=>{let d=Math.hypot(v.x,v.y)||1;return{x:v.x/d,y:v.y/d};};
 const screen=(p)=>({x:origin.x+p.x*scale,y:origin.y-p.y*scale});
 const world=(p)=>({x:(p.x-origin.x)/scale,y:(origin.y-p.y)/scale});
 function line(a,b,color,width=1,dash=[]){let x=screen(a),y=screen(b);ctx.beginPath();ctx.moveTo(x.x,x.y);ctx.lineTo(y.x,y.y);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dash);ctx.stroke();ctx.setLineDash([]);}
-function dot(p,r,color,label,side='right'){let q=screen(p);ctx.beginPath();ctx.arc(q.x,q.y,r,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();ctx.strokeStyle='#0c1725';ctx.lineWidth=2;ctx.stroke();if(label){ctx.fillStyle='#d8e4f4';ctx.font='12px DM Sans, sans-serif';ctx.textAlign=side==='right'?'left':'right';ctx.fillText(label,q.x+(side==='right'?11:-11),q.y-11);}}
+function dot(p,r,color,label,side='right'){let q=screen(p);ctx.beginPath();ctx.arc(q.x,q.y,r,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();ctx.strokeStyle='#ffffff';ctx.lineWidth=2;ctx.stroke();if(label){ctx.fillStyle='#50637e';ctx.font='12px DM Sans, sans-serif';ctx.textAlign=side==='right'?'left':'right';ctx.fillText(label,q.x+(side==='right'?11:-11),q.y-11);}}
 function arrow(a,b,color){line(a,b,color,2);const v=norm({x:b.x-a.x,y:b.y-a.y});const p={x:a.x+(b.x-a.x)*.7,y:a.y+(b.y-a.y)*.7};const k=.15;line({x:p.x-v.x*k-v.y*k*.65,y:p.y-v.y*k+v.x*k*.65},p,color,2);line({x:p.x-v.x*k+v.y*k*.65,y:p.y-v.y*k-v.x*k*.65},p,color,2);}
 function draw(){
  const dpr=Math.min(window.devicePixelRatio||1,2),rect=canvas.getBoundingClientRect();w=rect.width;h=rect.height;if(!w||!h)return;
@@ -17,10 +17,10 @@ function draw(){
  origin={x:w/2,y:h/2};const extent=Math.max(state.a*1.48,Math.hypot(state.a,state.b)*1.27,7);scale=Math.min(w/(extent*2),h/(extent*1.55));
  const l=world({x:0,y:h}),r=world({x:w,y:0});
  ctx.lineWidth=1;ctx.strokeStyle=colors.grid;for(let i=Math.floor(l.x);i<=Math.ceil(r.x);i++){if(i%2!==0)continue;let x=screen({x:i,y:0}).x;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}for(let i=Math.floor(l.y);i<=Math.ceil(r.y);i++){if(i%2!==0)continue;let y=screen({x:0,y:i}).y;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
- line({x:l.x,y:0},{x:r.x,y:0},'#496079',1.25);line({x:0,y:l.y},{x:0,y:r.y},'#496079',1.25);
+ line({x:l.x,y:0},{x:r.x,y:0},'#a3b3c8',1.25);line({x:0,y:l.y},{x:0,y:r.y},'#a3b3c8',1.25);
  ctx.fillStyle=colors.text;ctx.font='10px DM Sans';ctx.textAlign='center';for(let i=Math.ceil(l.x/2)*2;i<=r.x;i+=2)if(i)ctx.fillText(i,screen({x:i,y:0}).x,origin.y+16);
  const m=geo;
- if(m.mode==='hyperbola'){line({x:l.x,y:-state.b/state.a*l.x},{x:r.x,y:state.b/state.a*r.x},'#465d75',1.3,[7,6]);line({x:l.x,y:state.b/state.a*l.x},{x:r.x,y:-state.b/state.a*r.x},'#465d75',1.3,[7,6]);}
+ if(m.mode==='hyperbola'){line({x:l.x,y:-state.b/state.a*l.x},{x:r.x,y:state.b/state.a*r.x},'#aabbd0',1.3,[7,6]);line({x:l.x,y:state.b/state.a*l.x},{x:r.x,y:-state.b/state.a*r.x},'#aabbd0',1.3,[7,6]);}
  // Geometry curves: ellipse closed; hyperbola both branches.
  const branches=m.mode==='ellipse'?[1]:[1,-1];
  branches.forEach(branch=>{ctx.beginPath();let started=false;const N=m.mode==='ellipse'?600:440;for(let i=0;i<=N;i++){
@@ -28,14 +28,14 @@ function draw(){
  let p=m.mode==='ellipse'?{x:m.a*Math.cos(t),y:m.b*Math.sin(t)}:{x:branch*m.a*Math.cosh(t),y:m.b*Math.sinh(t)};
  let q=screen(p);if(!started){ctx.moveTo(q.x,q.y);started=true;}else ctx.lineTo(q.x,q.y);
  }ctx.strokeStyle=colors.curve;ctx.lineWidth=2.7;ctx.stroke();});
- line(m.F1,m.P,'#f99a8866',1.5,[6,5]);line(m.F2,m.P,'#f99a8866',1.5,[6,5]);
+ line(m.F1,m.P,'#e57b6c99',1.5,[6,5]);line(m.F2,m.P,'#e57b6c99',1.5,[6,5]);
  const pn=m.normal, tangent=norm({x:-pn.y,y:pn.x});const reach=20;
- line({x:m.P.x-tangent.x*reach,y:m.P.y-tangent.y*reach},{x:m.P.x+tangent.x*reach,y:m.P.y+tangent.y*reach},'#dbd4af',1.1,[4,6]);
+ line({x:m.P.x-tangent.x*reach,y:m.P.y-tangent.y*reach},{x:m.P.x+tangent.x*reach,y:m.P.y+tangent.y*reach},'#b6a17e',1.1,[4,6]);
  if(state.showRay&&m.mode==='ellipse'){
- arrow(m.F1,m.P,'#f4b674');arrow(m.P,m.F2,'#7cdbb4');
+ arrow(m.F1,m.P,'#df9d49');arrow(m.P,m.F2,'#56b18d');
  }
  dot(m.F1,5,colors.foci,'F₁','right');dot(m.F2,5,colors.foci,'F₂','left');
- let q=screen(m.P);ctx.beginPath();ctx.arc(q.x,q.y,11,0,Math.PI*2);ctx.strokeStyle='#ffcc8366';ctx.lineWidth=2;ctx.stroke();dot(m.P,6,colors.point,'P');
+ let q=screen(m.P);ctx.beginPath();ctx.arc(q.x,q.y,11,0,Math.PI*2);ctx.strokeStyle='#e5a64566';ctx.lineWidth=2;ctx.stroke();dot(m.P,6,colors.point,'P');
 }
 function refresh(){
  if(state.mode==='ellipse')state.b=Math.min(state.b,state.a);geo=model(state.mode,state.a,state.b,state.t);
