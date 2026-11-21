@@ -1,3 +1,4 @@
+import { pagesChatEndpoint } from './deployment.js';
 import {model,fmt} from './math.js';
 const $=s=>document.querySelector(s);
 const canvas=$('#graph'),ctx=canvas.getContext('2d');
@@ -62,6 +63,8 @@ canvas.addEventListener('pointermove',e=>{if(dragging)updatePoint(e);});canvas.a
 canvas.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowDown'){state.t-=.075;e.preventDefault();refresh();}else if(e.key==='ArrowRight'||e.key==='ArrowUp'){state.t+=.075;e.preventDefault();refresh();}});
 new ResizeObserver(()=>draw()).observe(canvas);
 $('#askform').addEventListener('submit',async e=>{e.preventDefault();let question=$('#question').value.trim();if(!question)return;const btn=$('#send');btn.disabled=true;btn.textContent='思考中…';$('#answer').textContent='正在向 AI 數學導師提問…';
-try{const response=await fetch('/api/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({question,state:{mode:state.mode,a:state.a,b:state.b,t:state.t}})});const data=await response.json();if(!response.ok)throw new Error(data.error||'連線錯誤');$('#answer').textContent=data.answer;}catch(err){$('#answer').textContent=err.message+'（不影響互動數學實驗功能。）';}finally{btn.disabled=false;btn.textContent='詢問導師 ↗';}});
+try{const endpoint=location.hostname.endsWith('.github.io')?pagesChatEndpoint:'/api/chat';
+if(!endpoint)throw new Error('AI 導師的 Cloudflare 後端尚未連接');
+const response=await fetch(endpoint,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({question,state:{mode:state.mode,a:state.a,b:state.b,t:state.t}})});const data=await response.json();if(!response.ok)throw new Error(data.error||'連線錯誤');$('#answer').textContent=data.answer;}catch(err){$('#answer').textContent=err.message+'（不影響互動數學實驗功能。）';}finally{btn.disabled=false;btn.textContent='詢問導師 ↗';}});
 document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{$('#question').value=c.dataset.prompt;$('#question').focus();}));
 refresh();
