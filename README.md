@@ -71,5 +71,7 @@ Cloudflare 設定遵照 2026 年 Workers Static Assets 用法；後端使用官�
 若同時部署 Cloudflare Worker，將 `public/deployment.js` 的 `pagesChatEndpoint` 設為已部署 Worker 的公開 HTTPS 網址加上 `/api/chat`。Worker 已允許 `https://nathanvong.github.io` 存取聊天 API。此設定檔只存公開端點。每次更新前端後，可用以下指令同步發布分支。
 
 ```bash
-git subtree push --prefix=public origin gh-pages
+git fetch origin gh-pages
+pages_commit=$(git commit-tree HEAD:public -p FETCH_HEAD -m "Publish ConicLab frontend")
+git push origin "$pages_commit:refs/heads/gh-pages"
 ```
