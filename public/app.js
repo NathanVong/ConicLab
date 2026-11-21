@@ -60,11 +60,74 @@ function fromPointer(e){let r=canvas.getBoundingClientRect();return{x:e.clientX-
 function updatePoint(e){const p=world(fromPointer(e));if(state.mode==='ellipse')state.t=Math.atan2(p.y/state.b,p.x/state.a);else state.t=Math.max(-2.65,Math.min(2.65,Math.asinh(p.y/state.b)));refresh();}
 canvas.addEventListener('pointerdown',e=>{let p=fromPointer(e),q=screen(geo.P);if(Math.hypot(p.x-q.x,p.y-q.y)<32){dragging=true;canvas.setPointerCapture(e.pointerId);updatePoint(e);}});
 canvas.addEventListener('pointermove',e=>{if(dragging)updatePoint(e);});canvas.addEventListener('pointerup',()=>dragging=false);canvas.addEventListener('pointercancel',()=>dragging=false);
-canvas.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowDown'){state.t-=.075;e.preventDefault();refresh();}else if(e.key==='ArrowRight'||e.key==='ArrowUp'){state.t+=.075;e.preventDefault();refresh();}});
+canvas.addEventListener('keydown', event => {
+  const steps = {ArrowLeft: -0.075, ArrowDown: -0.075, ArrowRight: 0.075, ArrowUp: 0.075};
+  const step = steps[event.key];
+  if (!step) return;
+  event.preventDefault();
+  const position = state.t + step;
+  state.t = state.mode === 'hyperbola' ? Math.max(-2.65, Math.min(2.65, position)) : position;
+  refresh();
+});
 new ResizeObserver(()=>draw()).observe(canvas);
-$('#askform').addEventListener('submit',async e=>{e.preventDefault();let question=$('#question').value.trim();if(!question)return;const btn=$('#send');btn.disabled=true;btn.textContent='思考中…';$('#answer').textContent='正在向 AI 數學導師提問…';
-try{const endpoint=location.hostname.endsWith('.github.io')?pagesChatEndpoint:'/api/chat';
-if(!endpoint)throw new Error('AI 導師的 Cloudflare 後端尚未連接');
-const response=await fetch(endpoint,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({question,state:{mode:state.mode,a:state.a,b:state.b,t:state.t}})});const data=await response.json();if(!response.ok)throw new Error(data.error||'連線錯誤');$('#answer').textContent=data.answer;}catch(err){$('#answer').textContent=err.message+'（不影響互動數學實驗功能。）';}finally{btn.disabled=false;btn.textContent='詢問導師 ↗';}});
-document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{$('#question').value=c.dataset.prompt;$('#question').focus();}));
+const answerBox = $('#answer');
+const questionInput = $('#question');
+const sendButton = $('#send');
+const challengeButton = $('#challenge');
+
+function showAnswer(text) {
+  answerBox.textContent = text;
+  globalThis.renderMathInElement?.(answerBox, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '\\(', right: '\\)', display: false},
+      {left: '$', right: '$', display: false},
+    ],
+    throwOnError: false,
+    trust: false,
+  });
+}
+
+async function askTutor(question, task = 'question') {
+  if (!question || sendButton.disabled) return;
+  const isChallenge = task === 'challenge';
+  sendButton.disabled = challengeButton.disabled = true;
+  sendButton.textContent = '思考中…';
+  answerBox.textContent = isChallenge ? '正在準備挑戰題…' : '正在向 AI 數學導師提問…';
+
+  try {
+    const endpoint = location.hostname.endsWith('.github.io') ? pagesChatEndpoint : '/api/chat';
+    if (!endpoint) throw new Error('AI 導師的 Cloudflare 後端尚未連接');
+    const {mode, a, b, t} = state;
+    const position = mode === 'ellipse' ? t % (2 * Math.PI) : t;
+    const result = await fetch(endpoint, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({question, task, state: {mode, a, b, t: position}}),
+    });
+    const data = await result.json();
+    if (!result.ok) throw new Error(data.error || '連線錯誤');
+    showAnswer(data.answer);
+  } catch (err) {
+    answerBox.textContent = err.message + '（不影響互動數學實驗功能。）';
+  } finally {
+    sendButton.disabled = challengeButton.disabled = false;
+    sendButton.textContent = '詢問導師 ↗';
+  }
+}
+
+$('#askform').addEventListener('submit', event => {
+  event.preventDefault();
+  askTutor(questionInput.value.trim());
+});
+challengeButton.addEventListener('click', () => {
+  askTutor('請給我一道可用畫布驗證的高中數學挑戰題，只給提示。', 'challenge');
+});
+document.querySelectorAll('.chip[data-prompt]').forEach(chip => {
+  chip.addEventListener('click', () => {
+    questionInput.value = chip.dataset.prompt;
+    questionInput.focus();
+  });
+});
 refresh();
